@@ -1,0 +1,50 @@
+---
+
+- name: Sanitize findfiles environment
+  set_fact:
+    cacheable: false
+    filterfiles_files: []
+    filterfiles_found: []
+    filterfiles_list_include: []
+    filterfiles_list_exclude: []
+
+- name: Gathering list of possible files
+  when: filterfiles_paths is defined
+  find:
+    paths: "{{ item }}"
+    hidden: true
+    recurse: true
+    file_type: any
+  register: filterfiles_found
+  with_items: "{{ filterfiles_paths }}"
+  loop_control:
+    label: "{{ item }}"
+
+- name: Filtering file list
+  when: filterfiles_found.results is defined and filterfiles_found|length > 0
+  vars:
+    filterfiles_all: "{{ filterfiles_found | json_query('results[].files[].path') }}"
+    filterfiles_list_include: []
+    filterfiles_list_exclude: []
+  set_fact:
+    cacheable: false
+    filterfiles_list_include: "{{ filterfiles_list_include }} + {{ filterfiles_all | select('search', item[0]) | list }}"
+    filterfiles_list_exclude: "{{ filterfiles_list_exclude }} + {{ filterfiles_all | select('search', item[1]) | list }}"
+  with_nested:
+    - "{{ filterfiles_include | default([omit]) }}"
+    - "{{ filterfiles_exclude | default([omit]) }}"
+
+- name: Merging and sorting file lists
+  when: filterfiles_list_include|length > 0
+  set_fact:
+    cacheable: false
+    filterfiles_files: "{{ filterfiles_list_include | difference(filterfiles_list_exclude) | sort | unique }}"
+
+- name: "DEBUG: Filtered file list"
+  when: filterfiles_debug is defined and filterfiles_debug == true
+  debug:
+    var: filterfiles_files
+
+
+# vim:ft=ansible:et:ts=2:sw=2:sts=2:
+
