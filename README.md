@@ -1,5 +1,5 @@
 ## Why?
-This abomination was created out of a need to walk a remove file system to gather a list of files matching a pattern (with exclusions) but without using any custom or non-stock Ansible modules.  Many features of Ansible were abused to make this role possible.
+This abomination was created out of a need to walk a remote file system to gather a list of files matching a pattern (with exclusions) but without using any custom or non-stock Ansible modules.  Many features of Ansible were abused to make this role possible.
 
 ## Usage
 Include the config below in an existing role to get a list of files in the variable "filterfiles\_files"
